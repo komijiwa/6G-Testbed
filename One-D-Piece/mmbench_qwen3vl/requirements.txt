@@ -1,0 +1,31 @@
+# Qwen3-VL + vLLM + MMBench eval environment (isolated from the main
+# aitestbed/orchestrator env -- vLLM/transformers versions conflict with it).
+#
+# Python: 3.11 (use a clean venv/conda env; do NOT reuse one that already has
+# an old torch -- torch 2.5.1 lacks torch.distributed.fsdp.CPUOffloadPolicy and
+# breaks transformers >= 4.57 / the vLLM stack).
+#
+# Usage:
+#   python -m venv ~/envs/qwen3vl && source ~/envs/qwen3vl/bin/activate
+#   # or: conda create -n qwen3vl python=3.11 && conda activate qwen3vl
+#   pip install --upgrade pip
+#   pip install -r requirements.txt
+#
+# Let vLLM resolve a COHERENT torch / torchvision / transformers set. Do NOT
+# hard-pin transformers: pinning a very new one (e.g. 5.17) forces torch>=2.7
+# while an old vLLM may pin torch 2.5.x -> exact conflict seen in the wild.
+# transformers just needs to be >=4.57 for Qwen3-VL.
+vllm==0.31.0
+transformers>=4.57.0
+qwen-vl-utils>=0.0.14
+
+# ---- MMBench eval direct deps ----
+numpy
+pillow
+pandas
+pyyaml
+tqdm
+requests
+
+# ---- weight download helper (used by fetch_odp_assets.sh) ----
+huggingface_hub>=0.20

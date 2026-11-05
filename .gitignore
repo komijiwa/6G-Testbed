@@ -35,6 +35,8 @@
 !netemu/scripts/clear_profile.sh
 !aitestbed/docker/entrypoint.sh
 !aitestbed/docker/run.sh
+!One-D-Piece/mmbench_qwen3vl/fetch_odp_assets.sh
+!One-D-Piece/mmbench_qwen3vl/run_odp_mmbench.sh
 
 **/.DS_Store
 **/.idea/
@@ -73,3 +75,18 @@ aicodec/aicodec/models/liquid/checkpoints/**/*.safetensors
 aicodec/aicodec/models/liquid/checkpoints/model/tokenizer.json
 aicodec/aicodec/dataset/StreamingBench/**/*.mp4
 aicodec/aicodec/dataset/StreamingBench/**/questions_results_*.json
+
+# ODP (One-D-Piece) checkpoints: download only (see README), never commit weights
+aicodec/aicodec/models/one_d_piece/checkpoints/**/*.bin
+aicodec/aicodec/models/one_d_piece/checkpoints/**/*.safetensors
+aicodec/aicodec/models/one_d_piece/checkpoints/**/*.pt
+aicodec/aicodec/models/one_d_piece/checkpoints/**/*.ckpt
+
+# Qwen3-VL weights: download only (see README), never commit weights
+One-D-Piece/Qwen3-VL-30B-A3B-Instruct/**
+!One-D-Piece/Qwen3-VL-30B-A3B-Instruct/.gitkeep
+
+# MMBench_DEV_EN images: fetched via fetch_odp_assets.sh, keep manifest only
+One-D-Piece/MMBench_DEV_EN/**/*.jpg
+One-D-Piece/MMBench_DEV_EN/**/*.jpeg
+One-D-Piece/MMBench_DEV_EN/**/*.png

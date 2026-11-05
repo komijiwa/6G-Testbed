@@ -813,6 +813,17 @@ class TestbedOrchestrator:
         # Initialize clients (lazy loaded based on provider)
         self._clients = {}
 
+        # One-D-Piece image-over-UDP scenario: import lazily so a missing GPU
+        # bridge (torch/omegaconf, see aicodec/aicodec/models/one_d_piece)
+        # cannot break scenario discovery at orchestrator start-up.
+        _odp_image_udp_scenario_cls = None
+        try:
+            from scenarios.odp_image_udp import ODPImageUDPScenario
+            _odp_image_udp_scenario_cls = ODPImageUDPScenario
+        except Exception as _e:  # noqa: BLE001
+            logging.getLogger(__name__).warning(
+                f"odp_image_udp scenario unavailable: {_e}")
+
         # Scenario type mapping
         self.scenario_classes = {
             "chat": ChatScenario,
@@ -867,6 +878,8 @@ class TestbedOrchestrator:
                 EncoderPlacementConcurrentQwen36Scenario
 
         }
+        if _odp_image_udp_scenario_cls is not None:
+            self.scenario_classes["odp_image_udp"] = _odp_image_udp_scenario_cls
 
     # ------------------------------------------------------------------
     # Asymmetric profile support (S4-260848 Table C.Z-1)
@@ -1132,6 +1145,15 @@ class TestbedOrchestrator:
                 self._clients[provider] = EncoderPlacementClient()
             elif provider == "sglang-engine-qwen36":
                 self._clients[provider] = EncoderPlacementQwen36Client()
+            elif provider == "odp-image-udp":
+                # One-D-Piece image link over lossy UDP. Nominal placeholder
+                # only: ODPImageUDPScenario builds its own sender (chunked or
+                # whole) from the scenario config's `mode` key. Use the whole
+                # client as the placeholder so a whole-mode run does not
+                # import the chunked implementation before mode dispatch.
+                from clients.odp_image_udp_client_whole import (
+                    ODPImageUDPWholeClient)
+                self._clients[provider] = ODPImageUDPWholeClient()
             else:
                 raise ValueError(f"Unknown provider: {provider}")
         return self._clients[provider]
@@ -2368,9 +2390,12 @@ def main():
             print(f"  Latency (mean): {metrics.latency_mean:.3f}s")
             print(f"  Latency (p95):  {metrics.latency_p95:.3f}s")
             print(f"  Success rate:   {metrics.success_rate:.1f}%")
-            print(f"  Request bytes:  {metrics.request_bytes_mean:.0f}")
-            print(f"  Response bytes: {metrics.response_bytes_mean:.0f}")
-            print(f"  UL/DL ratio:    {metrics.ul_dl_ratio_mean:.3f}")
+            req_bytes = f"{metrics.request_bytes_mean:.0f}" if metrics.request_bytes_mean is not None else "N/A"
+            resp_bytes = f"{metrics.response_bytes_mean:.0f}" if metrics.response_bytes_mean is not None else "N/A"
+            ul_dl = f"{metrics.ul_dl_ratio_mean:.3f}" if metrics.ul_dl_ratio_mean is not None else "N/A"
+            print(f"  Request bytes:  {req_bytes}")
+            print(f"  Response bytes: {resp_bytes}")
+            print(f"  UL/DL ratio:    {ul_dl}")
             if metrics.tokens_in_mean is not None and metrics.tokens_out_mean is not None:
                 print(f"  Tokens in:      {metrics.tokens_in_mean:.0f}")
                 print(f"  Tokens out:     {metrics.tokens_out_mean:.0f}")
